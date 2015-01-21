@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="164efab5ffa24e90a31674262d93ac00" Name="Country-Language-Percentage_Diagram" >
+        <EntityTypeShape EntityType="WorldLanguagesModel.Country" Width="1.5" PointX="2.75" PointY="2.75" />
+        <EntityTypeShape EntityType="WorldLanguagesModel.Language" Width="1.5" PointX="9.25" PointY="2.625" />
+        <EntityTypeShape EntityType="WorldLanguagesModel.CountrySpokenLanguage" Width="1.5" PointX="6.125" PointY="5" />
+        <AssociationConnector Association="WorldLanguagesModel.PercentageCountry" />
+        <AssociationConnector Association="WorldLanguagesModel.PercentageLanguage" />
+        <EntityTypeShape EntityType="WorldLanguagesModel.CountryNameLocalization" Width="1.5" PointX="6" PointY="0.75" />
+        <AssociationConnector Association="WorldLanguagesModel.CountryNameCountry" />
+        <AssociationConnector Association="WorldLanguagesModel.CountryNameLanguage" />
+        </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

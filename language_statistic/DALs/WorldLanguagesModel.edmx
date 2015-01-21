@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl" Namespace="WorldLanguagesModel.Store" Alias="Self" Provider="System.Data.SqlClient" ProviderManifestToken="2005">
+        <EntityContainer Name="WorldLanguagesModelTargetContainer" >
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm" xmlns:cg="http://schemas.microsoft.com/ado/2006/04/codegeneration" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" Namespace="WorldLanguagesModel" Alias="Self" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" annotation:UseStrongSpatialTypes="false">
+        <EntityContainer Name="WorldLanguagesModelContainer" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Countries" EntityType="WorldLanguagesModel.Country" />
+          <EntitySet Name="Languages" EntityType="WorldLanguagesModel.Language" />
+          <EntitySet Name="CountrySpokenLanguages" EntityType="WorldLanguagesModel.CountrySpokenLanguage" />
+          <AssociationSet Name="PercentageCountry" Association="WorldLanguagesModel.PercentageCountry">
+            <End Role="Percentage" EntitySet="CountrySpokenLanguages" />
+            <End Role="Country" EntitySet="Countries" />
+          </AssociationSet>
+          <AssociationSet Name="PercentageLanguage" Association="WorldLanguagesModel.PercentageLanguage">
+            <End Role="Percentage" EntitySet="CountrySpokenLanguages" />
+            <End Role="Language" EntitySet="Languages" />
+          </AssociationSet>
+          <EntitySet Name="CountryNameLocalizations" EntityType="WorldLanguagesModel.CountryNameLocalization" />
+          <AssociationSet Name="CountryNameCountry" Association="WorldLanguagesModel.CountryNameCountry">
+            <End Role="CountryName" EntitySet="CountryNameLocalizations" />
+            <End Role="Country" EntitySet="Countries" />
+          </AssociationSet>
+          <AssociationSet Name="CountryNameLanguage" Association="WorldLanguagesModel.CountryNameLanguage">
+            <End Role="CountryName" EntitySet="CountryNameLocalizations" />
+            <End Role="Language" EntitySet="Languages" />
+          </AssociationSet>
+          </EntityContainer>
+        <EntityType Name="Country">
+          <Key>
+            <PropertyRef Name="ISO3166_1" />
+          </Key>
+          <Property Name="ISO3166_1" Type="String" Nullable="false" annotation:StoreGeneratedPattern="None" />
+          <Property Name="EnglishName" Type="String" Nullable="false" />
+          <NavigationProperty Name="CountrySpokenLanguages" Relationship="WorldLanguagesModel.PercentageCountry" FromRole="Country" ToRole="Percentage" />
+          <NavigationProperty Name="CountryNameLocalizations" Relationship="WorldLanguagesModel.CountryNameCountry" FromRole="Country" ToRole="CountryName" />
+          <Property Name="Population" Type="Int32" Nullable="false" />
+          <Property Name="PopulationSource" Type="String" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Language">
+          <Key>
+            <PropertyRef Name="ISO639_3" />
+          </Key>
+          <Property Name="ISO639_3" Type="String" Nullable="false" annotation:StoreGeneratedPattern="None" />
+          <Property Name="EnglishName" Type="String" Nullable="false" />
+          <NavigationProperty Name="CountrySpokenLanguages" Relationship="WorldLanguagesModel.PercentageLanguage" FromRole="Language" ToRole="Percentage" />
+          <NavigationProperty Name="CountryNameLocalizations" Relationship="WorldLanguagesModel.CountryNameLanguage" FromRole="Language" ToRole="CountryName" />
+          <Property Name="NumberOfTotalSpeakers" Type="WorldLanguagesModel.NumberOfSpeakers" Nullable="false" />
+          </EntityType>
+        <EntityType Name="CountrySpokenLanguage">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="CountryID" Type="String" Nullable="false" />
+          <Property Name="LanguageID" Type="String" Nullable="false" />
+          <NavigationProperty Name="Country" Relationship="WorldLanguagesModel.PercentageCountry" FromRole="Percentage" ToRole="Country" />
+          <NavigationProperty Name="Language" Relationship="WorldLanguagesModel.PercentageLanguage" FromRole="Percentage" ToRole="Language" />
+          <Property Name="NumberOfSpeakers" Type="WorldLanguagesModel.NumberOfSpeakers" Nullable="false" />
+        </EntityType>
+        <Association Name="PercentageCountry">
+          <End Type="WorldLanguagesModel.CountrySpokenLanguage" Role="Percentage" Multiplicity="*" />
+          <End Type="WorldLanguagesModel.Country" Role="Country" Multiplicity="1" />
+          <ReferentialConstraint>
+            <Principal Role="Country">
+              <PropertyRef Name="ISO3166_1" />
+            </Principal>
+            <Dependent Role="Percentage">
+              <PropertyRef Name="CountryID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="PercentageLanguage">
+          <End Type="WorldLanguagesModel.CountrySpokenLanguage" Role="Percentage" Multiplicity="*" />
+          <End Type="WorldLanguagesModel.Language" Role="Language" Multiplicity="1" />
+          <ReferentialConstraint>
+            <Principal Role="Language">
+              <PropertyRef Name="ISO639_3" />
+            </Principal>
+            <Dependent Role="Percentage">
+              <PropertyRef Name="LanguageID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="CountryNameLocalization" >
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <NavigationProperty Name="Country" Relationship="WorldLanguagesModel.CountryNameCountry" FromRole="CountryName" ToRole="Country" />
+          <NavigationProperty Name="Language" Relationship="WorldLanguagesModel.CountryNameLanguage" FromRole="CountryName" ToRole="Language" />
+          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" xmlns="http://schemas.microsoft.com/ado/2009/11/edm" />
+          <Property Name="CountryID" Type="String" Nullable="false" />
+          <Property Name="LanguageID" Type="String" Nullable="false" />
+          <Property Name="Value" Type="String" Nullable="false" />
+        </EntityType>
+        <Association Name="CountryNameCountry">
+          <End Type="WorldLanguagesModel.CountryNameLocalization" Role="CountryName" Multiplicity="*" />
+          <End Type="WorldLanguagesModel.Country" Role="Country" Multiplicity="1" />
+          <ReferentialConstraint>
+            <Principal Role="Country">
+              <PropertyRef Name="ISO3166_1" />
+            </Principal>
+            <Dependent Role="CountryName">
+              <PropertyRef Name="CountryID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="CountryNameLanguage">
+          <End Type="WorldLanguagesModel.CountryNameLocalization" Role="CountryName" Multiplicity="*" />
+          <End Type="WorldLanguagesModel.Language" Role="Language" Multiplicity="1" />
+          <ReferentialConstraint>
+            <Principal Role="Language">
+              <PropertyRef Name="ISO639_3" />
+            </Principal>
+            <Dependent Role="CountryName">
+              <PropertyRef Name="LanguageID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <ComplexType Name="NumberOfSpeakers">
+          <Property Type="Int32" Name="NumberOfL1Speakers" Nullable="false" />
+          <Property Type="String" Name="NumberOfL1SpeakersSource" Nullable="false" />
+          <Property Type="Int32" Name="NumberOfL2Speakers" Nullable="false" />
+          <Property Type="String" Name="NumberOfL2SpeakersSource" Nullable="false" />
+        </ComplexType>
+        </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs" Space="C-S">
+        <Alias Key="Model" Value="WorldLanguagesModel" />
+        <Alias Key="Target" Value="WorldLanguagesModel.Store" />
+        <EntityContainerMapping CdmEntityContainer="WorldLanguagesModelContainer" StorageEntityContainer="WorldLanguagesModelTargetContainer">
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <edmx:Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </edmx:Connection>
+    <edmx:Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="True" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </edmx:Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

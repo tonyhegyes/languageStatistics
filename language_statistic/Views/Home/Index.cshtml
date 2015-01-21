@@ -1,0 +1,1024 @@
+﻿@using System.Linq
+@using Microsoft.AspNet.Identity
+@model ICollection<language_statistic.Models.Language>
+
+@{
+    ViewBag.Title = "Home Page";
+}
+
+@if (Request.IsAuthenticated)
+{
+    <input type="button" class="btn btn-primary" value="Change language" style="transform:rotate(270deg);position:absolute;margin-top:200px;margin-left:-100px;"
+           data-toggle="collapse" data-target="#languagesPanel" data-bind="css: { 'hidden': $root.isLanguagesVisible }, style: { 'margin-top': $root.isResourcesVisible() ? '200px' : '250px' }" />
+    <input type="button" class="btn btn-primary" value="Change resource" style="transform:rotate(270deg);position:absolute;margin-top:100px;margin-left:-100px;"
+           data-toggle="collapse" data-target="#resourcesPanel" data-bind="css: { 'hidden': $root.isResourcesVisible }" />
+    /////////////////
+    <div class="row">
+        
+        <section id="languagesPanel" class="col-md-2 collapse in text-center" style="height:550px;" data-bind="css: { 'hidden': !$root.isLanguagesVisible() }, collapseInit: false">
+            <p class="h3">I want to learn:</p>
+            <div class="right-inner-addon">
+                <i class="glyphicon glyphicon-search"></i>
+                <input type="search" id="languages_searchBox" class="form-control" placeholder="Search" />
+            </div>
+            <br />
+            <div class="outer-container" id="availableLanguages_div" style="height:440px;">
+                <div class="inner-container" style="height:440px;">
+                @foreach (var item in Model)
+                {
+                    <input type="button" id="@item.ISO639_3" name="languageButton" class="btn-block btn" value="@item.EnglishName" />
+                }
+                </div>
+            </div>
+        </section>
+        <section id="resourcesPanel" class="collapse in" data-bind="css: $root.resourcesPanelWidth, collapseInit: false">
+            <ul class="nav nav-tabs nav-justified" style="margin-top:20px;" data-bind="foreach: $root.tabs">
+                <li data-bind="css: { 'active': $data == $root.currentTab() }"><a name="navigationLink" style="cursor:pointer;" data-bind="text: $data"></a></li>
+            </ul>
+            <div class="outer-container" style="height:490px;">
+                <div class="inner-container" style="height:490px;">
+                    <!-- ko if: $root.currentLang() != '' --> @* $root.listOfResources().length == $root.tabs.length && *@
+                    <div class="col-md-12" style="height:50px;margin-top:5px;">
+                        <div style="width:25%;float:left;border-right:1px solid #ddd;">
+                            <select id="languageFilter_select" class="bootstrapselect show-tick" title="Filter languages" style="margin-top:6px;" data-live-search="true" multiple data-width="90%" data-style="btn-primary">
+                                <optgroup label="Your languages" data-bind="foreach: $root.userSpokenLanguages">
+                                    <option data-bind="text: LanguageName, value: LanguageCode" selected></option>
+                                </optgroup>
+                                <optgroup label="Available languages" data-bind="foreach: $root.availableLanguages, bootstrapSelectInit: 'languageFilter_select'">
+                                    <option data-bind="text: LanguageName, value: LanguageCode"></option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div style="margin-top:6px;width:50%;float:left;">
+                            <div style="width:15%;float:left;">
+                                <a style="cursor:pointer;float:right;" data-bind="style: { 'color': !$root.sortAscending() ? '#428bca' : '#ddd' }, click: function() { $root.sortAscending(false); }">
+                                    <span class="glyphicon glyphicon-chevron-down" style="width:100%;font-size:2.5em;"></span>
+                                </a>
+                            </div>
+                            <div class="text-center" style="width:70%;float:left;">
+                                <select id="sort_select" data-style="btn-primary" data-width="90%" data-bind="options: $root.sortOptions, optionsText: 'SortOption', optionsValue: 'SortProperty', bootstrapSelectInit: $element.id"></select>
+                            </div>
+                            <div style="width:15%;float:left;">
+                                <a style="cursor:pointer;float:left;" data-bind="style: { 'color': $root.sortAscending() ? '#428bca' : '#ddd' }, click: function() { $root.sortAscending(true); }">
+                                    <span class="glyphicon glyphicon-chevron-up" style="width:100%;font-size:2.5em;"></span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="text-center" style="width:25%;float:left;border-left:1px solid #ddd;">
+                            <ul class="nav nav-pills" style="display:inline-block;">
+                                <li style="margin-top:6px;" data-bind="css: { 'active': $root.showFreeResources }, style: { 'border': !$root.showFreeResources() ? '1px solid #ddd' : '', 'border-radius': '4px' }, click: function() { $root.showFreeResources(!$root.showFreeResources()); }"><a name="" style="cursor:pointer;">Free</a></li>
+                                <li style="margin-top:6px;" data-bind="css: { 'active': $root.showPaidResources }, style: { 'border': !$root.showPaidResources() ? '1px solid #ddd' : '', 'border-radius': '4px' },click: function() { $root.showPaidResources(!$root.showPaidResources()); }"><a name="" style="cursor:pointer;">Paid</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+                    <div id="selectedLanguageWarning" class="col-md-12 alert h3 text-center" data-bind="resourcesPanelError: true"></div> 
+                    <div class="tab-content" data-bind="foreach: $root.tabs">
+                        <div class="tab-pane text-center" data-bind="attr: { id: $root.tabs[$index()] }, css: { active: $root.currentTab() == $element.id }">
+                            <!-- ko if: $root.listOfResources().length == $root.tabs.length && $root.currentLang() != '' -->
+                            <!-- ko foreach: $root.listOfResources()[$index()] -->
+                            <div class="col-md-12" style="padding-left:0px;padding-right:0px;" data-bind="css: { 'hidden': (IsFree && !$root.showFreeResources()) || (!IsFree && !$root.showPaidResources()) }">
+                                <div class="thumbnail right-caption" style="background-color:lightskyblue;width:100%;margin-bottom:10px;">
+                                    <img alt="" data-bind="changePreviewImageSize: $root.deviceType" />
+                                    <div class="caption" style="overflow-y:hidden;margin-right:6%;" data-bind="style: { 'height': $root.isDetailsVisible() ? '160px' : '120px' }">
+                                        <a style="display:inline-block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;width:100%;" data-bind="attr: { href: Website, target: '_blank' }, text: ($index() + 1) + '. ' + EnglishName"></a>
+                                        <div style="overflow-y:auto;" data-bind="html: ShortDescription, style: { 'height': (($root.isDetailsVisible() ? 160 : 120) - 60) + 'px' }"></div>
+                                        <div data-bind="attr: { 'data-score': Rating }, ratingInit: true">Community rating: </div>
+                                    </div>
+                                    <a class="carousel-control right showDescriptionToggler" style="width:8%;border-bottom-right-radius:4px;border-top-right-radius:4px;cursor:pointer;" data-bind="attr: { id: ID }">
+                                        <span class="glyphicon glyphicon-chevron-right"></span>
+                                    </a>
+                                </div>
+                            </div>
+                            <!-- /ko -->
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="fullDetailsPanel" class="outer-container collapse" style="height:550px;" data-bind="css: $root.fullDetailsPanelWidth, collapseInit: false">
+            <div class="inner-container" style="height:550px;">
+                <div class="h3 text-center" data-bind="fullDetailsPanelError: true"></div>
+                <!-- ko if: $root.listOfResources().length == $root.tabs.length && $root.currentResourceIndex() != -1 && $root.isDetailsVisible() -->
+                <div id="detailsSection">
+                    <!-- ko with: $root.listOfResources()[$root.currentTabIndex()]()[$root.currentResourceIndex()] -->
+                    <div class="h3 text-center">
+                        <a data-bind="text: EnglishName, attr: { 'href': Website, target: '_blank' }"></a>
+                        <p class="h4" data-bind="html: ShortDescription"></p>
+                    </div>
+
+                    <div data-bind="attr: { 'data-score': Rating }, ratingInit: true">
+                        Community rating:
+                    </div>
+
+                    <div data-bind="template: { name: $root.currentTab() + '_detailsTemplate', data: $data }"></div>
+
+                    <div>
+                        Lowest fee:
+                        <span data-bind="html: IsFree ? 'Free' : Fees"></span>
+                    </div>
+
+                    <p data-bind="html: 'Full description:' + Description"></p>
+                    <!-- /ko -->
+                </div>
+                <div id="adsSection">
+
+                </div>
+                <div id="reviewsSection" class="text-center">
+                    <p class="h2" data-bind="if: $root.listOfCurrentReviews().length == 0">There are no reviews for this resource! Be the first one to <a style="cursor:pointer;" data-toggle="collapse" data-target="#newReviewSection">write a review!</a></p>
+                    <input type="button" class="btn btn-sm btn-danger" value="Write a review" data-toggle="collapse" data-target="#newReviewSection" data-bind="css: { 'hidden': $root.listOfCurrentReviews().length == 0 }" />
+
+                    <div id="newReviewSection" class="collapse" data-bind="collapseInit: false">
+                        <div class="thumbnail text-center" style="background-color:whitesmoke;margin-bottom:0px;margin-top:10px;">
+                            <div id="newReviewRating" data-score="3" data-bind="ratingInit: false"></div>
+                            <textarea id="newReviewComment" placeholder="Write your review here please!" style="width:100%;border-radius:4px;max-width:100%;"></textarea>
+                            <input type="button" class="btn btn-default" value="Submit your review!" data-toggle="collapse" data-target="#newReviewSection" data-bind="click: function() { $root.submitReview(); }" />
+                        </div>
+                    </div>
+
+                    <div class="row" data-bind="foreach: $root.listOfCurrentReviews">
+                        <div class="col-md-12" style="padding-left:10px;padding-right:10px;">
+                            <div class="thumbnail text-center" style="background-color:white;margin-bottom:0px;margin-top:10px;">
+                                <div>
+                                    <span data-bind="text: UserName"></span>
+                                    <span data-bind="attr: { 'data-score': Rating }, ratingInit: true"></span>
+                                </div>
+                                <div data-bind="text: Comment" class="well well-sm"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /ko -->
+
+                <script type="text/html" data-bind="attr: { id: $root.tabs[0] + '_detailsTemplate' }">
+                    <div>
+                        Website available in:
+                        <span data-bind="forEachWithLength: $root.languagesExtractor(WebsiteLanguages)">
+                            <span data-bind="text: $data + (($index() != ($length - 1)) ? ', ' : '')"></span>
+                        </span>
+                    </div>
+                </script>
+                <script type="text/html" data-bind="attr: { id: $root.tabs[1] + '_detailsTemplate' }">
+                    <div>
+                        Translate from:
+                        <span data-bind="forEachWithLength: $root.languagesExtractor(FromLanguages)">
+                            <span data-bind="text: $data + (($index() != ($length - 1)) ? ', ' : '')"></span>
+                        </span>
+                    </div>
+                    <div>
+                        Translate to:
+                        <span data-bind="forEachWithLength: $root.languagesExtractor(ToLanguages)">
+                            <span data-bind="text: $data + (($index() != ($length - 1)) ? ', ' : '')"></span>
+                        </span>
+                    </div>
+                </script>
+                <script type="text/html" data-bind="attr: { id: $root.tabs[2] + '_detailsTemplate' }">
+                    <div>
+                        Forum available in:
+                        <span data-bind="forEachWithLength: $root.languagesExtractor(ForumLanguages)">
+                            <span data-bind="text: $data + (($index() != ($length - 1)) ? ', ' : '')"></span>
+                        </span>
+                    </div>
+                </script>
+            </div>
+        </section>
+        <section id="adsPanel-right" class="col-md-2" style="background:black;height:550px;" data-bind="css: { 'hidden': $root.isResourcesVisible() && $root.isDetailsVisible() }"></section>
+        <section id="adsPanel-bottom" class="col-md-12" style="background:black;height:90px;" data-bind="css: { 'hidden': !($root.isResourcesVisible() && $root.isDetailsVisible()) }"></section>
+    </div>
+}
+else
+{
+    <p class="h3 text-center">Based on your input, you are able to communicate with <span id="L1_statistic" style="color:red">0</span> people who use these languages as their mother tongue and another <span id="L2_statistic" style="color:red">0</span> people who learned them later in their life.</p>
+    <div class="row">
+        <div class="col-md-2" style="padding-right:0px;">
+            <ul class="nav nav-tabs nav-justified" role="tablist" style="width:430px;transform:rotate(270deg);position:absolute;margin-left:-235px;margin-top:195px;">
+                <li><a href="#selectedLanguages" role="tab" data-toggle="tab">Selected languages</a></li>
+                <li class="active"><a href="#availableLanguages" role="tab" data-toggle="tab">Available languages</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active text-center" id="availableLanguages">
+                    <div class="right-inner-addon ">
+                        <i class="glyphicon glyphicon-search"></i>
+                        <input id="languages_searchBox" type="search" class="form-control" placeholder="Search" />
+                    </div>
+                    <br />
+                    <div id="availableLanguages_div" style="height:375px;overflow-y:auto">
+                        @foreach (var item in Model)
+                    {
+                        <button type="button" id="@item.ISO639_3" name="languageButton" value="@item.EnglishName" class="btn-block btn">@item.EnglishName</button>
+                    }
+                    </div>
+                </div>
+                <div class="tab-pane" id="selectedLanguages">
+                    <div id="selectedLanguages_div" class="text-center" style="height:430px;overflow-y:auto">
+                        <p id="selectedLanguages_warning" class="h3">You still haven't selected any languages!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-10" style="height:430px;">
+            <ul class="nav nav-tabs nav-justified" role="tablist">
+                <li class="active"><a role="tab" data-toggle="tab" id="L1_button" name="controlButton">Show L1 Users</a></li>
+                <li><a role="tab" data-toggle="tab" id="L2_button" name="controlButton">Show L2 Users</a></li>
+            </ul>
+            <div id="world-map" style="height:390px"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <p class="h2">Learn new languages!</p>
+            <p class="h4"><a href="#" onclick="openLogin(); return false;">Login</a> or <a href="#" onclick="openRegister(); return false;">Register</a> now and find out from other member just like you what are the best free and paid resources out there available for learning a specific language.</p>
+            <p class="h4">Become fluent ASAP!</p>
+        </div>
+    </div>
+}
+
+@section Styles{
+    @if(Request.IsAuthenticated){
+    <link rel="stylesheet" href="~/Content/jquery.raty.css" />
+    } else {
+    <link rel="stylesheet" href="~/Content/jquery-jvectormap.css" />
+    }
+    <link rel="stylesheet" href="~/Content/bootstrap-select.css" />
+    <style>            
+        .left-inner-addon {
+            position: relative;
+        }
+        .left-inner-addon input {
+            padding-left: 30px;
+        }
+        .left-inner-addon i {
+            position: absolute;
+            padding: 10px 12px;
+            pointer-events: none;
+        }
+
+        .right-inner-addon {
+            position: relative;
+        }
+        .right-inner-addon input {
+            padding-right: 30px;
+        }
+        .right-inner-addon i {
+            position: absolute;
+            right: 0px;
+            padding: 10px 12px;
+            pointer-events: none;
+        }
+    </style>
+    <style>
+        @@media (min-width: 769px) {
+            .col-md-2 {
+                width: 16.66666667%;
+                float: left;
+            }
+
+            .col-md-5 {
+                width: 41.66666667%;
+                float: left;
+            }
+
+            .col-md-6 {
+                width: 50%;
+                float: left;
+            }
+
+            .col-md-8 {
+                width: 66.66666667%;
+                float: left;
+            }
+
+            .col-md-10 {
+                width: 83.33333333%;
+                float: left;
+            }
+
+            .col-md-12 {
+                width: 100%;
+                float: left;
+            }
+        }
+
+        @@media (max-width: 481px) {
+        }
+    </style>
+    <style>
+        .thumbnail.right-caption > img {
+            float: left;
+            margin-right: 9px;
+        }
+
+        .thumbnail.right-caption {
+            float: left;
+        }
+
+        .thumbnail.right-caption > .caption {
+            padding: 4px;
+        }
+    </style>
+    <style>
+        .carousel-control.right {
+            background : rgba(255, 255, 255, 0.5);
+            background : -moz-linear-gradient(right, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
+            background : -webkit-gradient(linear, right top, left top, from(rgba(255, 255, 255, 0.5)), to(transparent));
+            background : -webkit-linear-gradient(right, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
+            background : -o-linear-gradient(right, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
+            background : linear-gradient(to left, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='whitesmoke', GradientType=1);
+        }
+    </style>
+    <style>
+        .outer-container {
+             position: relative;
+             overflow: hidden;
+        }
+ 
+        .inner-container {
+             overflow-x: hidden;
+             overflow-y: scroll;
+        }
+ 
+        .inner-container::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script type="text/javascript" src="~/Scripts/bootstrap-select.js"></script>
+    <script type="text/javascript" src="~/Scripts/sammy-0.7.5.js"></script>
+    @if(Request.IsAuthenticated){
+        <script type="text/javascript" src="~/Scripts/jquery.raty.js"></script>
+        <script type="text/javascript" src="~/Scripts/knockout-3.2.0.js"></script>
+    } else {
+        <script type="text/javascript" src="~/Scripts/jquery.tinysort.js"></script>
+        <script type="text/javascript" src="~/Scripts/jquery.tinysort.charorder.js"></script>
+        <script type="text/javascript" src="~/Scripts/jquery-jvectormap-1.2.2.js"></script>
+        <script type="text/javascript" src="~/Scripts/jVectorMaps/world-ISO-A3/jquery-jvectormap-world-mill-en-US.js"></script>
+        <script>
+            function openLogin() { $('#loginLink').click(); }
+            function openRegister() { $('#registerLink').click(); }
+        </script>
+    }
+    <script>
+        $('#languages_searchBox').keyup(function (event) {
+            var oldInput = $(this).val();
+            $('div#availableLanguages_div > div').children('input').each(function (index, element) {
+                if (!$(this).attr('value').toLocaleLowerCase().match(oldInput.toLocaleLowerCase())) { $(this).css('display', 'none'); }
+                else { $(this).css('display', 'block'); }
+        });
+    });
+    </script>
+    <script>
+        @if (!Request.IsAuthenticated){
+            Dictionary<string, int> countrySpeakers = new Dictionary<string, int>();
+            Dictionary<string, object> languagesCountries = new Dictionary<string, object>();
+
+            var collectionOfLanguagesAndCountriesWhoSpeakIt = from country in (from csl in Model select csl.CountrySpokenLanguages) //ITERATE THROUGH EACH COUNTRY WHICH SPEAKS THAT LANGUAGE
+            select (from fields in country select new { fields.CountryID, fields.LanguageID, fields.NumberOfSpeakers, fields.Country.Population }); //SELECT ONLY THE FIELDS WE ARE INTERESTED IN ABOUT THE LANGUAGE-COUNTRY RELATIONSHIP
+
+        int i = 0;
+        foreach (var languageAndItsCountries in collectionOfLanguagesAndCountriesWhoSpeakIt)
+        {
+            var fieldsOfInterestAboutCountry = from countryWhichSpeaksLanguage in languageAndItsCountries
+            select new { countryWhichSpeaksLanguage.CountryID, NumberOfL1Speakers = countryWhichSpeaksLanguage.NumberOfSpeakers.NumberOfL1Speakers, NumberOfL2Speakers = countryWhichSpeaksLanguage.NumberOfSpeakers.NumberOfL2Speakers, PercentageOfL1Speakers = Math.Round(((double)countryWhichSpeaksLanguage.NumberOfSpeakers.NumberOfL1Speakers / countryWhichSpeaksLanguage.Population) * 100, 2), PercentageOfL2Speakers = Math.Round(((double)countryWhichSpeaksLanguage.NumberOfSpeakers.NumberOfL2Speakers / countryWhichSpeaksLanguage.Population) * 100, 2) };
+            languagesCountries.Add(Model.ElementAt(i++).ISO639_3, fieldsOfInterestAboutCountry);
+        }
+
+        //POPULATE THE DICTIONARY TO BE PASSED ON TO jVectorMap
+        var countries =  MvcApplication.db_languages.Countries.ToList();
+        foreach (var country in countries) {
+            countrySpeakers.Add(country.ISO3166_1, 0);
+        }
+
+        <text>
+        var languagesAndTheCountriesWhichSpeakThem = $.parseJSON('@Html.Raw((new System.Web.Script.Serialization.JavaScriptSerializer()).Serialize(languagesCountries))');
+        var percentageOfL1SpeakersPerCountry = $.parseJSON('@Html.Raw((new System.Web.Script.Serialization.JavaScriptSerializer()).Serialize(countrySpeakers))');
+        var percentageOfL2SpeakersPerCountry = $.parseJSON('@Html.Raw((new System.Web.Script.Serialization.JavaScriptSerializer()).Serialize(countrySpeakers))');
+        var showValues = 'L1'; var L1_statistic = 0; var L2_statistic = 0; var langCount = 0;
+
+        $('#world-map').vectorMap({
+            map: 'world_mill',
+            series: {
+                regions: [{
+                    min: 0, max: 100,
+                    scale: ['#FFFFFF', '#0071A4'],
+                    values: (showValues == 'L1' ? percentageOfL1SpeakersPerCountry : percentageOfL2SpeakersPerCountry)
+                }]
+            },
+            onRegionLabelShow: function (e, el, code) {
+                el.html(el.html() + ' (Percentage - ' + (showValues == 'L1' ? percentageOfL1SpeakersPerCountry[code] : percentageOfL2SpeakersPerCountry[code]) + ')');
+            }
+        });
+
+        var mapObject = $('#world-map').vectorMap('get', 'mapObject');
+        $('button[name=languageButton]').click(function (event) {
+            if ($(this).parent('div').attr('id') == 'selectedLanguages_div') {
+                langCount--;
+                location.hash = (langCount == 0 ? 'lang=null' : (location.hash.replace(new RegExp('[\&]?' + $(this).attr('id')), '')).replace('=&', '='));
+            }
+            else {
+                langCount++;
+                location.hash = 'lang=' + location.hash.replace(new RegExp('#lang=(null)?'), '') + (langCount == 1 ? '' : '&') + $(this).attr('id');
+            }
+        });
+        $('a[name=controlButton]').click(function (event) {
+            switch ($(this).attr('id')) {
+                case "L1_button": { showValues = "L1"; switchClasses($('#L1_button'), $('#L2_button')); } break;
+                case "L2_button": { showValues = "L2"; switchClasses($('#L2_button'), $('#L1_button')); } break;
+            }
+
+            mapObject.series.regions[0].setValues(showValues == 'L1' ? percentageOfL1SpeakersPerCountry : percentageOfL2SpeakersPerCountry);
+
+            function switchClasses(primaryButton, defaultButton) {
+                primaryButton.addClass('btn-primary');
+                primaryButton.removeClass('btn-default');
+
+                defaultButton.addClass('btn-default');
+                defaultButton.removeClass('btn-primary');
+            }
+        });
+
+        var s = Sammy(function () {
+            var oldLanguages = ''; var testForIntegrity = true;
+            function testForLanguagesIntegrity(currentLanguages) {
+                if (currentLanguages != '') {
+                    var j = 0; var correctHash = '';
+                    $.each(currentLanguages, function (i, language) {
+                        if (language.toString().length == 3 && $('#' + language).length != 0) {
+                            correctHash += (j == 0 ? '' : '&') + language;
+                            j++;
+                        }
+                    });
+
+                    langCount = j;
+                    return correctHash;
+                }
+            }
+            function manipulateVisualExperience(currentLanguages) {
+                //USER-FRIENDLINESS
+                if (langCount == 0)
+                    $('#selectedLanguages_warning').removeClass('hidden');
+                else
+                    $('#selectedLanguages_warning').addClass('hidden');
+
+                //REMOVE OLD LANGUAGES
+                if (oldLanguages != '') {
+                    $.each(oldLanguages, function (i, language) {
+                        if (currentLanguages == '' || currentLanguages.indexOf(language) == -1) {
+                            //MANIPULATE MAP DATA
+                            $.each(languagesAndTheCountriesWhichSpeakThem[language], function (j, country) {
+                                percentageOfL1SpeakersPerCountry[country.CountryID] =
+                                    percentageOfL1SpeakersPerCountry[country.CountryID] - country.PercentageOfL1Speakers;
+                                L1_statistic = L1_statistic - country.NumberOfL1Speakers;
+                                //
+                                percentageOfL2SpeakersPerCountry[country.CountryID] =
+                                    percentageOfL2SpeakersPerCountry[country.CountryID] - country.PercentageOfL2Speakers;
+                                L2_statistic = L2_statistic - country.NumberOfL2Speakers;
+                            });
+                            //MANIPULATE BUTTONS
+                            $('#availableLanguages_div').append($('#' + language));
+                            $('div#availableLanguages_div>button').tsort({ attr: 'id' });
+                        }
+                    });
+                }
+                //ADD NEW LANGUAGES
+                if (currentLanguages != '') {
+                    $.each(currentLanguages, function (i, language) {
+                        if (oldLanguages == '' || oldLanguages.indexOf(language) == -1) {
+                            //MANIPULATE MAP DATA
+                            $.each(languagesAndTheCountriesWhichSpeakThem[language], function (i, country) {
+                                percentageOfL1SpeakersPerCountry[country.CountryID] =
+                                    percentageOfL1SpeakersPerCountry[country.CountryID] + country.PercentageOfL1Speakers;
+                                L1_statistic = L1_statistic + country.NumberOfL1Speakers;
+                                //
+                                percentageOfL2SpeakersPerCountry[country.CountryID] =
+                                    percentageOfL2SpeakersPerCountry[country.CountryID] + country.PercentageOfL2Speakers;
+                                L2_statistic = L2_statistic + country.NumberOfL2Speakers;
+                            });
+                            //MANIPULATE BUTTONS
+                            $('#selectedLanguages_div').append($('#' + language));
+                        }
+                    });
+                }
+
+                mapObject.series.regions[0].setValues(showValues == 'L1' ? percentageOfL1SpeakersPerCountry : percentageOfL2SpeakersPerCountry);
+                $('#L1_statistic').html(L1_statistic); $('#L2_statistic').html(L2_statistic);
+
+                oldLanguages = currentLanguages;
+            }
+
+            this.get('lang=:languages', function (ctx, section) {
+                if (testForIntegrity) {
+                    correctHash = testForLanguagesIntegrity(this.params.languages.split('&'));
+
+                    if (this.params.languages != correctHash) {
+                        testForIntegrity = false;
+                        location.hash = 'lang=' + (correctHash == '' ? 'null' : correctHash);
+                    }
+
+                    manipulateVisualExperience(correctHash.split('&'));
+                }
+
+                testForIntegrity = true;
+            });
+        });
+
+        $(function () {
+            location.hash = "lang=null";
+            s.run();
+        });
+        </text>
+        }
+    </script>
+    <script>
+    @if (Request.IsAuthenticated){
+    <text>
+    function ResourcesViewModel() {
+        //Variables
+        var self = this;
+
+        self.currentLang = ko.observable('');
+
+        self.tabs = ['Courses', 'Dictionaries', 'Forums'];
+        self.currentTab = ko.observable(self.tabs[0]);
+        self.currentTabIndex = ko.observable(0);
+
+        self.currentResource = ko.observable('');
+        self.currentResourceIndex = ko.observable(-1);
+
+        self.listOfCurrentReviews = ko.observableArray();
+        self.listOfResources = ko.observableArray();
+        for (var i = 0; i < self.tabs.length; i++)
+            self.listOfResources.push(new ko.observableArray());
+
+        /*GET RESOURCES*/
+        function getResources(getAsync) {
+            return $.when($.ajax({ url: '/Home/GetLanguageResources', data: { langISO639_3: self.currentLang(), resourceType: self.currentTab(), languageFilter: self.selectedLanguages().toString() }, dataType: 'json', async: getAsync }));
+        }
+        function getResourcesCallback(data) {
+            if (data.status == "success") {
+                self.resourcesPanelRetrievalError(false);
+
+                var myObject = JSON.parse(data.listOfResources);
+                if (myObject.length == 0) {
+                    self.listOfResources.removeAll();
+                } else {
+                    if (self.listOfResources().length == 0) {
+                        for (var i = 0; i < self.tabs.length; i++)
+                            self.listOfResources.push(new ko.observableArray());
+                    }
+
+                    self.listOfResources()[self.currentTabIndex()].removeAll();
+                    for (var i in myObject) {
+                        self.listOfResources()[self.currentTabIndex()].push(myObject[i]);
+                    }
+
+                    sortResources();
+                }
+            } else if (data.status == "fail") { getResourcesRetrievalError(); }
+        }
+        function getResourcesRetrievalError() {
+            self.listOfResources.removeAll();
+            self.resourcesPanelRetrievalError(true);
+        }
+
+        var Sammy_getResources = Sammy(function () {
+            //ERROR CORRECTION
+            this.get('#:language', function (ctx, section) {
+                if (testForLanguageIntegrity(this.params.language)) {
+                    location.hash = '#' + this.params.language + '/' + self.currentTab();
+                }
+            });
+            this.get('#:language/', function (ctx, section) {
+                if (testForLanguageIntegrity(this.params.language)) {
+                    location.hash = '#' + this.params.language + '/' + self.currentTab();
+                }
+            });
+            this.get('#:language/:resourceType/', function (ctx, section) {
+                if (testForLanguageIntegrity(this.params.language) && testForResourceTypeIntegrity(this.params.language, this.params.resourceType)) {
+                    location.href = '#' + this.params.language + '/' + this.params.resourceType;
+                }
+            });
+            //ACTUAL WORK
+            this.get('#:language/:resourceType', function (ctx, section) {
+                if (testForLanguageIntegrity(this.params.language) && testForResourceTypeIntegrity(this.params.language, this.params.resourceType)) {
+                    self.currentLang(this.params.language); self.currentResource(''); self.currentResourceIndex(-1);
+                    self.currentTab(this.params.resourceType); self.currentTabIndex(self.tabs.indexOf(this.params.resourceType));
+
+                    getResources(true).done(function (resources) { getResourcesCallback(resources); }).fail(function () { getResourcesRetrievalError() })
+                        .always(function () { /* $('#languagesPanel').collapse('show'); $('#fullDetailsPanel').collapse('hide'); $('#resourcesPanel').collapse('show'); */ });
+                }
+            });
+        });
+
+        $(function () {
+            Sammy_getResources.run();
+            $('input[name=languageButton]').click(function (event) {
+                location.hash = '#' + event.target.id + '/' + self.currentTab();
+            });
+            $('body').on('click', 'a[name=navigationLink]', function (event) {
+                location.href = '#' + self.currentLang() + '/' + $(this).text();
+            });
+        });
+
+        /*GET REVIEWS*/
+        function getReviews() {
+            return $.when($.ajax({ url: '/Home/GetReviews', data: { resourceGuid: self.currentResource(), resourceType: self.currentTab(), dataType: 'json', async: true } }));
+        }
+        function getReviewsCallback(data) {
+            if (data.status == "success") {
+                self.fullDetailsPanelRetrievalError(false);
+
+                var myReviews = JSON.parse(data.listOfReviews);
+                self.listOfCurrentReviews.removeAll();
+
+                for (var i in myReviews) {
+                    self.listOfCurrentReviews.push(myReviews[i]);
+                }
+            }
+            else if (data.status == "fail") { getReviewsRetrievalError(); }
+        }
+        function getReviewsRetrievalError() {
+            self.currentResource('');
+            self.currentResourceIndex(-1);
+            self.listOfCurrentReviews.removeAll();
+
+            self.fullDetailsPanelRetrievalError(true);
+        }
+
+        var Sammy_getReviews = Sammy(function () {
+            //ERROR CORRECTION
+            this.get('#:language/:resourceType/:resourceID/', function (ctx, section) {
+                if (testForLanguageIntegrity(this.params.language) && testForResourceTypeIntegrity(this.params.language, this.params.resourceType)) {
+                    href.location = '#' + this.params.language + '/' + this.params.resourceType + '/' + this.params.resourceID;
+                }
+            });
+            //ACTUAL WORK
+            this.get('#:language/:resourceType/:resourceID', function (ctx, section) {
+                if (testForLanguageIntegrity(this.params.language) && testForResourceTypeIntegrity(this.params.language, this.params.resourceType) && testForLoadedLanguageAndResourceTypeIntegrity(this.params.language, this.params.resourceType) && testForResourceIdIntegrity(this.params.language, this.params.resourceType, this.params.resourceID)) {
+                    getReviews().done(function (reviews) { getReviewsCallback(reviews); }).fail(function () { getReviewsRetrievalError() })
+                        .always(function () { $('#languagesPanel').collapse('hide'); $('#fullDetailsPanel').collapse('show'); if ($(window).innerWidth() < 992) { $('#resourcesPanel').collapse('hide'); } else { $('#resourcesPanel').collapse('show'); } });
+                }
+            });
+        });
+
+        $(function () {
+            Sammy_getReviews.run();
+            $('body').on('click', 'a.showDescriptionToggler', function (event) {
+                $('#newReviewSection').collapse('hide');
+                location.href = '#' + self.currentLang() + '/' + self.currentTab() + '/' + $(this).attr('id');
+            });
+        });
+
+        /*SUBMIT NEW REVIEW*/
+        self.submitReview = function () {
+            $.post('/Home/SubmitReview', { resourceGuid: self.currentResource(), rating: $('#newReviewRating').raty('score'), comment: $('#newReviewComment').val() }, function (data) {
+                if (data.status == "success") {
+                    alert("OK");
+                } else if (data.status == "fail") { alert("NOT OK"); }
+            }).success().fail();
+        }
+
+        /*SAMMY MODULARIZATION*/
+        function testForLanguageIntegrity(language) {
+            if (language.length != 3 || $('#' + language).length != 1) {
+                location.hash = ''; /*CALLS THE NOT_FOUND ROUTE*/
+                return false;
+            }
+
+            return true;
+        }
+        function testForResourceTypeIntegrity(language, resourceType) {
+            if (self.tabs.indexOf(resourceType) == -1) {
+                location.hash = '#' + language + '/' + self.tabs[0];
+                return false;
+            }
+
+            return true;
+        }
+        function testForResourceIdIntegrity(language, resourceType, resourceID) {
+            var index = -1;
+            if (self.listOfResources().length != 0) {
+                index = ko.utils.arrayIndexOf(self.listOfResources()[self.currentTabIndex()](),
+                    ko.utils.arrayFirst(self.listOfResources()[self.currentTabIndex()](), function (item) {
+                        return item.ID == resourceID;
+                    })
+                );
+            }
+
+            self.currentResourceIndex(index);
+            if (index == -1) {
+                location.hash = '#' + language + '/' + resourceType;
+                self.currentResource(''); return false;
+            } else { self.currentResource(resourceID); return true; }
+        }
+        function testForLoadedLanguageAndResourceTypeIntegrity(language, resourceType) {
+            if (self.currentLang() != language || self.listOfResources()[self.tabs.indexOf(resourceType)]().length == 0) {
+                self.currentLang(language); self.currentResource(''); self.currentResourceIndex(-1);
+                self.currentTab(resourceType); self.currentTabIndex(self.tabs.indexOf(resourceType));
+
+                var ajaxResult = null;
+                getResources(false).done(function (resources) { getResourcesCallback(resources); ajaxResult = true; })
+                    .fail(function () { getResourcesRetrievalError(); location.href = '#' + language + '/' + resourceType; ajaxResult = false; });
+
+                return ajaxResult;
+            } else { return true; }
+        }
+
+        /*VISUAL MANIPULATION*/
+        self.DEVICE_TYPE = { EXTRASMALL: 0, SMALL: 1, MEDIUM: 2, LARGE: 3 };
+        self.deviceType = ko.observable(-1);
+
+        self.isLanguagesVisible = ko.observable(true);
+        self.isResourcesVisible = ko.observable(true);
+        self.isDetailsVisible = ko.observable(false);
+
+        self.resourcesPanelWidth = ko.computed(function () {
+            if (self.isDetailsVisible()) {
+                return addHidden('col-md-6');
+            } else {
+                return addHidden('col-md-8');
+            }
+
+            function addHidden(width) {
+                if (self.isResourcesVisible())
+                    return width;
+                else
+                    return width + ' hidden';
+            }
+        });
+        self.fullDetailsPanelWidth = ko.computed(function () {
+            if (self.isResourcesVisible()) {
+                return addHidden('col-md-6');
+            }
+            else {
+                return addHidden('col-md-10');
+            }
+
+            function addHidden(width) {
+                if (self.isDetailsVisible())
+                    return width;
+                else
+                    return width + ' hidden';
+            }
+        });
+
+        ko.bindingHandlers.changePreviewImageSize = {
+            update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+                var value = ko.unwrap(valueAccessor());
+                var max_width = $('div.body-content').innerWidth() * (self.isDetailsVisible() ? 0.4166666667 : 0.6666666667);
+
+                if (self.isDetailsVisible()) {
+                    $(element).attr('src', 'http://placehold.it/' + Math.round(max_width * 0.25) + 'x160');
+
+                } else {
+                    $(element).attr('src', 'http://placehold.it/' + Math.round(max_width * 0.33) + 'x120');
+                }
+            }
+        }
+        ko.bindingHandlers.ratingInit = {
+            init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+                $(element).raty({ score: $(element).attr('data-score'), readOnly: valueAccessor(), space: false, starHalf: '/Content/raty_images/star-half.png', starOn: '/Content/raty_images/star-on.png', starOff: '/Content/raty_images/star-off.png' });
+            }
+        };
+
+        var Sammy_notFound = Sammy(function () {
+            this.get('#/:resourceType', function (ctx, section) {
+                if (self.tabs.indexOf(this.params.resourceType) == -1) { location.hash = ''; }
+                else { self.currentTab(this.params.resourceType); self.currentTabIndex(self.tabs.indexOf(this.params.resourceType)); }
+            });
+
+            this.notFound = function (ctx, section) { //COMPLETE REINITIALIZATION OF THE LAYOUT
+                $(function () {
+                    $('#languages_searchBox').val('').trigger('keyup'); //REINITIALIZE THE SEARCH_BOX AND SET ALL LANGUAGES TO VISIBLE
+
+                    $('#languagesPanel').collapse('show');
+                    $('#resourcesPanel').collapse('show');
+                    $('#fullDetailsPanel').collapse('hide');
+
+                    self.currentLang('');
+
+                    self.currentTab(self.tabs[0]);
+                    self.currentTabIndex(0);
+
+                    self.currentResource('');
+                    self.currentResourceIndex(-1);
+
+                    self.listOfCurrentReviews.removeAll();
+                    if (self.listOfResources().length == 0) {
+                        for (var i = 0; i < self.tabs.length; i++)
+                            self.listOfResources.push(new ko.observableArray());
+                    } else {
+                        for (var i = 0; i < self.tabs.length; i++)
+                            self.listOfResources()[i].removeAll();
+                    }
+                });
+            };
+        });
+
+        $(function () {
+            Sammy_notFound.run();
+            //
+            $('#languagesPanel').on('show.bs.collapse', function (event) {
+                location.href = '#';
+                self.isLanguagesVisible(true);
+
+                /* THIS SHOULD HAPPEN IF I WOULD NOT CALL FOR THE notFound ROUTE OF SAMMYJS
+                $('#fullDetailsPanel').collapse('hide');
+                $('#resourcesPanel').collapse('show');
+                */
+            });
+            $('#resourcesPanel').on('show.bs.collapse', function (event) {
+                self.isResourcesVisible(true);
+            });
+            $('#fullDetailsPanel').on('show.bs.collapse', function (event) {
+                self.isDetailsVisible(true);
+                $('#languagesPanel').collapse('hide');
+            });
+
+            $('#languagesPanel').on('hidden.bs.collapse', function (event) {
+                self.isLanguagesVisible(false);
+            });
+            $('#resourcesPanel').on('hidden.bs.collapse', function (event) {
+                self.isResourcesVisible(false);
+            });
+            $('#fullDetailsPanel').on('hidden.bs.collapse', function (event) {
+                self.isDetailsVisible(false);
+            });
+
+            $('#fullDetailsPanel').on('hidden.bs.collapse', '#newReviewSection', function (event) {
+                event.stopPropagation();
+            });
+
+            $(window).load(function (event) {
+                self.deviceType(getDeviceType($(this).innerWidth()));
+            });
+            $(window).resize(function (event) {
+                var currentDeviceType = getDeviceType($(this).innerWidth());
+
+                if (currentDeviceType < self.DEVICE_TYPE.MEDIUM && self.isDetailsVisible()) { if (self.deviceType() > currentDeviceType) $('#resourcesPanel').collapse('hide'); }
+                else { $('#resourcesPanel').collapse('show'); }
+
+                if (currentDeviceType != self.deviceType())
+                    self.deviceType(currentDeviceType);
+            });
+
+            function getDeviceType(innerWidth) {
+                if (innerWidth < 769) { return self.DEVICE_TYPE.EXTRASMALL; }
+                else if (innerWidth < 992) { return self.DEVICE_TYPE.SMALL; }
+                else if (innerWidth < 1201) { return self.DEVICE_TYPE.MEDIUM; }
+                else { return self.DEVICE_TYPE.LARGE; }
+            }
+        });
+
+        /*RESOURCES FILTERING*/
+        ko.bindingHandlers.bootstrapSelectInit = {
+            init: function (element, valueAccessor, allBindingsAccessor, viewModel, context) {
+                $('#' + valueAccessor()).selectpicker('refresh');
+
+                if (valueAccessor() == 'sort_select') {
+                    $('#sort_select').data('selectpicker').$newElement.on('hidden.bs.dropdown', function () {
+                        $(element).children('option:selected').each(function () { self.sortAfter($(this).val()); });
+                        sortResources();
+                    });
+                } else if (valueAccessor() == 'languageFilter_select') {
+                    $('#languageFilter_select').change(function () {
+                        self.selectedLanguages({});
+                        if ($(this).val() != null) {
+                            var langs = $(this).val().toString().split(',');
+                            self.selectedLanguages(langs);
+                        }
+                        getResources(true).done(function (resources) { getResourcesCallback(resources); }).fail(function () { getResourcesRetrievalError() });
+                    });
+                }
+            }
+        };
+        //FREE vs PAID SECTION
+        self.showPaidResources = ko.observable(true);
+        self.showFreeResources = ko.observable(true);
+
+        //SORT CRITERIA SECTION
+        self.sortAscending = ko.observable(false); self.sortAfter = ko.observable('Rating'); self.sortAscending.subscribe(function (newValue) { sortResources(); });
+        self.sortOptions = [{ SortProperty: 'Rating', SortOption: 'Community rating' }, { SortProperty: 'EnglishName', SortOption: 'Alphabetically' }];
+        function sortResources() {
+            self.listOfResources()[self.currentTabIndex()].sort(function (left, right) {
+                return left[self.sortAfter()] == right[self.sortAfter()] ? 0 : (left[self.sortAfter()] < right[self.sortAfter()] ? (self.sortAscending() ? -1 : 1) : (self.sortAscending() ? 1 : -1));
+            });
+        }
+
+        //FILTER LANGUAGES SECTION
+        function getUserSpokenLanguages(languagesString) {
+            var langCodes = languagesString.split('|');
+
+            var languages = new Array();
+            for (var i in langCodes) {
+                languages.push({ LanguageCode: langCodes[i], LanguageName: $('#' + langCodes[i]).val() });
+            }
+
+            return languages;
+        }
+        self.userSpokenLanguages = ko.observableArray(getUserSpokenLanguages('@MvcApplication.user_manager.Users.First(f => f.UserName == User.Identity.Name).SpokenLanguages'));
+        self.availableLanguages = ko.observableArray(); self.selectedLanguages = ko.observableArray(); self.unretrievedLanguageResources = ko.observableArray();
+
+        $(function () {
+            $('div#availableLanguages_div > div').children('input').each(function (index, element) {
+                self.availableLanguages.push({ LanguageCode: $(this).attr('id'), LanguageName: $(this).attr('value') });
+            });
+
+            for (var i = 0; i < self.userSpokenLanguages().length; i++) {
+                self.availableLanguages.remove(function (item) { return item.LanguageCode == self.userSpokenLanguages()[i].LanguageCode });
+                self.selectedLanguages.push(self.userSpokenLanguages()[i].LanguageCode);
+            }
+        });
+
+
+        /*ERROR HANDLING*/
+        self.resourcesPanelRetrievalError = ko.observable(false);
+        ko.bindingHandlers.resourcesPanelError = {
+            update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+                var error_info = getErrorInfo();
+
+                $(element).toggleClass('hidden', error_info.Message == '');
+                $(element).toggleClass('alert-info', error_info.AlertType == 'alert-info');
+                $(element).toggleClass('alert-warning', error_info.AlertType == 'alert-warning');
+                $(element).toggleClass('alert-danger', error_info.AlertType == 'alert-danger');
+
+                $(element).html(error_info.Message);
+
+                function getErrorInfo() {
+                    if (self.currentLang() == '') return { Message: 'Please select a language to start!', AlertType: 'alert-info' };
+                    else if (self.resourcesPanelRetrievalError()) return { Message: 'Something went wrong. Please try again!', AlertType: 'alert-danger' };
+                    else if (self.listOfResources().length == 0) return { Message: 'Sorry, we do not have any resources in our database for this language!', AlertType: 'alert-warning' };
+                    else return { Message: '', AlertType: '' };
+                }
+            }
+        };
+
+        self.fullDetailsPanelRetrievalError = ko.observable(false);
+        ko.bindingHandlers.fullDetailsPanelError = {
+            update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+                var error_info = getErrorInfo();
+
+                $(element).toggleClass('hidden', error_info.Message == '');
+                $(element).toggleClass('alert-info', error_info.AlertType == 'alert-info');
+                $(element).toggleClass('alert-warning', error_info.AlertType == 'alert-warning');
+                $(element).toggleClass('alert-danger', error_info.AlertType == 'alert-danger');
+
+                $(element).html(error_info.Message);
+
+                function getErrorInfo() {
+                    if (self.currentResourceIndex() == -1) return { Message: 'Please select a resource to see details about it!', AlertType: 'alert-info' };
+                    else if (self.fullDetailsPanelRetrievalError()) return { Message: 'Something went wrong. Please try again!', AlertType: 'alert-danger' };
+                    else return { Message: '', AlertType: '' }
+                }
+            }
+        };
+
+        /*Helpers*/
+        ko.bindingHandlers.collapseInit = {
+            init: function (element, valueAccessor, allBindingsAccessor, viewModel, context) {
+                $(element).collapse({ toggle: valueAccessor() });
+            }
+        };
+
+        ko.bindingHandlers.forEachWithLength = {
+            init: function (element, valueAccessor, allBindingsAccessor, viewModel, context) {
+                return ko.bindingHandlers.foreach.init(element, valueAccessor, allBindingsAccessor, viewModel, context);
+            },
+            update: function (element, valueAccessor, allBindingsAccessor, viewModel, context) {
+                var array = ko.utils.unwrapObservable(valueAccessor());
+                var extendedContext = context.extend({ "$length": array.length });
+                ko.bindingHandlers.foreach.update(element, valueAccessor, allBindingsAccessor, viewModel, extendedContext);
+            }
+        };
+
+        self.languagesExtractor = function (languagesString) {
+            return ko.computed(function () {
+                var langCodes = languagesString.split('|');
+
+                var languages = new Array();
+                for (var i in langCodes) {
+                    languages.push($('#' + langCodes[i]).val());
+                }
+
+                return languages;
+            });
+        }
+
+        function findWithAttr(array, attr, value) {
+            for (var i = 0; i < array.length; i += 1) {
+                if (array[i][attr] === value) {
+                    return i;
+                }
+            }
+        }
+    }
+    ko.applyBindings(new ResourcesViewModel());
+    </text>
+    }
+    </script>
+}

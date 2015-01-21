@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>@ViewBag.Title - My ASP.NET Application</title>
+    <!-- =========================
+        STYLESHEETS
+    ============================== -->
+    <!-- GLOBAL STYLESHEETS -->
+    @Styles.Render("~/Content/css")
+    <style>
+        .body-content {
+            width : 90%;
+        }
+    </style>
+    <!-- LOCAL STYLESHEETS -->
+    @RenderSection("styles", required: false)
+    <!-- =========================
+        COMPATIBILITY WITH OLDER BROWSERS
+    ============================== -->
+    <script type="text/javascript">
+        //IE10 Mobile viewport bug
+        if (navigator.userAgent.match(/IEMobile\/10\.0/) || navigator.userAgent.match(/WPDesktop/)) {
+            var msViewportStyle = document.createElement('style')
+            msViewportStyle.appendChild(
+              document.createTextNode(
+                '@@-ms-viewport{width:auto!important}'
+              )
+            )
+            document.querySelector('head').appendChild(msViewportStyle)
+        }
+        //Android stock browser bug
+        var nua = navigator.userAgent;
+        var isAndroid = (nua.indexOf('Mozilla/5.0') > -1 && nua.indexOf('Android ') > -1 && nua.indexOf('AppleWebKit') > -1 && nua.indexOf('Chrome') === -1)
+        if (isAndroid) {
+            $('select.form-control').removeClass('form-control').css('width', '100%')
+        }
+    </script>
+    <!--[if lt IE 9]>
+        @Scripts.Render("~/bundles/oldIEBrowsersSupport")
+    <![endif]-->
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+<body>
+    <div class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li>@Html.ActionLink("Home", "Index", "Home")</li>
+                    <li>@Html.ActionLink("About", "About", "Home")</li>
+                    <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
+                </ul>
+                @Html.Partial("_LoginPartial")
+            </div>
+        </div>
+    </div>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <p>&copy; @DateTime.Now.Year - Antonius Cezar Hegyes</p>
+        </footer>
+    </div>
+
+    <!-- =========================
+        SCRIPTS
+    ============================== -->
+    <!-- GLOBAL SCRIPTS -->
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    <script>
+        //VARIABLES
+        var loginPopover_isVisible = false;
+        var registerPopover_isVisible = false;
+
+        //INITIALIZATION OF POPOVERS
+        $('#loginLink').popover({
+            template: '<div class="popover" role="tooltip" name="loginPopover" style="position:fixed;"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>',
+            animation: false, html: true, trigger: 'manual', container: 'body', placement: 'bottom',
+            content: function () { return $('#loginPopoverHiddenContent').html(); }
+        }).on('click', function (e) {
+            if ($(window).width() > 768) {
+                e.preventDefault();
+
+                $('#registerLink').popover('hide');
+                registerPopover_isVisible = false;
+
+                $('#loginLink').popover(loginPopover_isVisible ? 'hide' : 'show');
+                loginPopover_isVisible = !loginPopover_isVisible;
+            }
+        });
+
+        $('#registerLink').popover({
+            template: '<div class="popover" role="tooltip" name="registerPopover" style="position:fixed;"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>',
+            animation: false, html: true, trigger: 'manual', container: 'body', placement: 'bottom',
+            content: function () { return $('#registerPopoverHiddenContent').html(); }
+        }).on('click', function (e) {
+            if ($(window).width() > 768) {
+                e.preventDefault();
+
+                $('#loginLink').popover('hide');
+                loginPopover_isVisible = false;
+
+                $('#registerLink').popover(registerPopover_isVisible ? 'hide' : 'show');
+                registerPopover_isVisible = !registerPopover_isVisible;
+            }
+        });
+
+        //PAGE FITTING
+        $('#loginLink').on('shown.bs.popover', function () {
+            $('[name="loginPopover"]').css('max-width', $('.navbar .container').width() + 'px');
+            $('[name="loginPopover"]').css('right', (($('.navbar').width() - $('.navbar .container').width()) / 2) + 'px');
+            $('[name="loginPopover"]').css('left', 'auto');
+
+            $('[name="loginPopover"]').children('.arrow').css('left', (100 - (($('.navbar-right li:nth-child(2)').width() / $('[name="loginPopover"]').width()) * 100) / 2) + '%');
+        });
+        $('#registerLink').on('shown.bs.popover', function () {
+            $('[name="registerPopover"]').css('max-width', $('.navbar .container').width() + 'px');
+            $('[name="registerPopover"]').css('right', ((($('.navbar').width() - $('.navbar .container').width()) / 2) + $('.navbar-right li:nth-child(2)').width()) + 'px');
+            $('[name="registerPopover"]').css('left', 'auto');
+
+            $('[name="registerPopover"]').children('.arrow').css('left', (100 - (($('.navbar-right li:nth-child(1)').width() / $('[name="registerPopover"]').width()) * 100) / 2) + '%');
+        });
+
+        $(window).resize(function () {
+            if ($(window).width() < 769) {
+                $('#loginLink').popover('hide');
+                loginPopover_isVisible = false;
+
+                $('#registerLink').popover('hide');
+                registerPopover_isVisible = false;
+            }
+
+            $('[name="loginPopover"]').css('right', (($('.navbar').width() - $('.navbar .container').width()) / 2) + 'px');
+            $('[name="registerPopover"]').css('right', ((($('.navbar').width() - $('.navbar .container').width()) / 2) + $('.navbar-right li:nth-child(2)').width()) + 'px');
+        });
+    </script>
+    <!-- LOCAL SCRIPTS -->
+    @RenderSection("scripts", required: false)
+</body>
+</html>

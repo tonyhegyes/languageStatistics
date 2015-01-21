@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl" Namespace="ResourcesModel.Store" Alias="Self" Provider="System.Data.SqlClient" ProviderManifestToken="2005">
+        <EntityContainer Name="ResourcesModelTargetContainer" >
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm" xmlns:cg="http://schemas.microsoft.com/ado/2006/04/codegeneration" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" Namespace="ResourcesModel" Alias="Self" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" annotation:UseStrongSpatialTypes="false">
+        <EntityContainer Name="ResourcesModelContainer" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="CourseWebsites" EntityType="ResourcesModel.CourseWebsite" />
+          <EntitySet Name="Reviews" EntityType="ResourcesModel.Review" />
+          <AssociationSet Name="ResourceReview" Association="ResourcesModel.ResourceReview">
+            <End Role="Resource" EntitySet="CourseWebsites" />
+            <End Role="Review" EntitySet="Reviews" />
+          </AssociationSet>
+          <EntitySet Name="Dictionaries" EntityType="ResourcesModel.Dictionary" />
+          <EntitySet Name="Fora" EntityType="ResourcesModel.Forum" />
+          <AssociationSet Name="DictionaryReview" Association="ResourcesModel.DictionaryReview">
+            <End Role="Dictionary" EntitySet="Dictionaries" />
+            <End Role="Review" EntitySet="Reviews" />
+          </AssociationSet>
+          <AssociationSet Name="ForumReview" Association="ResourcesModel.ForumReview">
+            <End Role="Forum" EntitySet="Fora" />
+            <End Role="Review" EntitySet="Reviews" />
+          </AssociationSet>
+        </EntityContainer>
+        <EntityType Name="CourseWebsite">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ISO639_3" Type="String" Nullable="false" />
+          <Property Name="Website_ISO639_3" Type="String" Nullable="false" />
+          <Property Name="EnglishName" Type="String" Nullable="false" />
+          <Property Name="EnglishType" Type="String" Nullable="false" />
+          <NavigationProperty Name="Reviews" Relationship="ResourcesModel.ResourceReview" FromRole="Resource" ToRole="Review" />
+          <Property Name="Website" Type="String" Nullable="false" />
+          <Property Name="ResourceDescription" Type="String" Nullable="false" />
+          <Property Name="IsFree" Type="String" Nullable="false" />
+          <Property Name="ShortDescription" Type="String" Nullable="false" />
+          <Property Name="LowestFee" Type="String" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Review">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="UserID" Type="String" Nullable="false" />
+          <NavigationProperty Name="Resource" Relationship="ResourcesModel.ResourceReview" FromRole="Review" ToRole="Resource" />
+          <Property Name="ResourceID" Type="Guid" Nullable="false" />
+          <Property Name="Comment" Type="String" Nullable="false" />
+          <Property Name="Rating" Type="Int16" Nullable="false" />
+          <NavigationProperty Name="Dictionary" Relationship="ResourcesModel.DictionaryReview" FromRole="Review" ToRole="Dictionary" />
+          <NavigationProperty Name="Forum" Relationship="ResourcesModel.ForumReview" FromRole="Review" ToRole="Forum" />
+        </EntityType>
+        <Association Name="ResourceReview">
+          <End Type="ResourcesModel.CourseWebsite" Role="Resource" Multiplicity="1" />
+          <End Type="ResourcesModel.Review" Role="Review" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Resource">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="Review">
+              <PropertyRef Name="ResourceID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Dictionary">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="TO_ISO639_3" Type="String" Nullable="false" />
+          <Property Name="FROM_ISO639_3" Type="String" Nullable="false" />
+          <Property Name="EnglishName" Type="String" Nullable="false" />
+          <Property Name="EnglishType" Type="String" Nullable="false" />
+          <Property Name="Website" Type="String" Nullable="false" />
+          <NavigationProperty Name="Reviews" Relationship="ResourcesModel.DictionaryReview" FromRole="Dictionary" ToRole="Review" />
+          <Property Name="ResourceDescription" Type="String" Nullable="false" />
+          <Property Name="IsFree" Type="String" Nullable="false" />
+          <Property Name="ShortDescription" Type="String" Nullable="false" />
+          <Property Name="LowestFee" Type="String" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Forum">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Tongue_ISO639_3" Type="String" Nullable="false" />
+          <Property Name="ISO639_3" Type="String" Nullable="false" />
+          <Property Name="EnglishName" Type="String" Nullable="false" />
+          <Property Name="EnglishType" Type="String" Nullable="false" />
+          <Property Name="Website" Type="String" Nullable="false" />
+          <NavigationProperty Name="Reviews" Relationship="ResourcesModel.ForumReview" FromRole="Forum" ToRole="Review" />
+          <Property Name="ResourceDescription" Type="String" Nullable="false" />
+          <Property Name="IsFree" Type="String" Nullable="false" />
+          <Property Name="ShortDescription" Type="String" Nullable="false" />
+          <Property Name="LowestFee" Type="String" Nullable="false" />
+        </EntityType>
+        <Association Name="DictionaryReview">
+          <End Type="ResourcesModel.Dictionary" Role="Dictionary" Multiplicity="1" />
+          <End Type="ResourcesModel.Review" Role="Review" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Dictionary">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="Review">
+              <PropertyRef Name="ResourceID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="ForumReview">
+          <End Type="ResourcesModel.Forum" Role="Forum" Multiplicity="1" />
+          <End Type="ResourcesModel.Review" Role="Review" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Forum">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="Review">
+              <PropertyRef Name="ResourceID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs" Space="C-S">
+        <Alias Key="Model" Value="ResourcesModel" />
+        <Alias Key="Target" Value="ResourcesModel.Store" />
+        <EntityContainerMapping CdmEntityContainer="ResourcesModelContainer" StorageEntityContainer="ResourcesModelTargetContainer">
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <edmx:Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </edmx:Connection>
+    <edmx:Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="True" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </edmx:Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

@@ -1,0 +1,41 @@
+﻿@using language_statistic.Models
+@using Microsoft.AspNet.Identity
+
+@if (Request.IsAuthenticated)
+{
+    <div class="nav navbar-nav navbar-right dropdown" style="top:3px">
+        <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+            My profile
+            <img src="@System.Security.Claims.ClaimsPrincipal.Current.Identities.First().Claims.FirstOrDefault(c => c.Type == "ProfilePicUrl").Value" style="width:30px;" />
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+            <li role="presentation" class="dropdown-header">Dropdown header</li>
+            <li role="presentation">
+                @Html.ActionLink("Hello " + User.Identity.GetUserName() + "!", "Manage", "Account", routeValues: null, htmlAttributes: new { title = "Manage", role = "menuitem", tabindex = "-1" })
+            </li>
+            <li role="presentation" class="divider"></li>
+            @using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm" }))
+            {
+                @Html.AntiForgeryToken()
+                <li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:document.getElementById('logoutForm').submit()">Log off</a></li>
+            }
+        </ul>
+    </div>
+}
+else
+{
+    <ul class="nav navbar-nav navbar-right">
+        <li>@Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink" })</li>
+        <li>@Html.ActionLink("Login", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
+    </ul>
+    
+    <div id="loginPopoverHiddenContent" style="display: none">
+        @Html.Partial("_LoginPopover", new LoginViewModel())
+    </div>
+    <div id="registerPopoverHiddenContent" style="display: none">
+        @Html.Partial("_RegisterPopover", new RegisterViewModel())
+    </div>
+}
+
+

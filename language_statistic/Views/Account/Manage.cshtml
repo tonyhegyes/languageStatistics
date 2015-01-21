@@ -1,0 +1,157 @@
+﻿@using language_statistic.Models;
+@using Microsoft.AspNet.Identity;
+@model Tuple<ApplicationUser, ManageUserViewModel>
+
+@{
+    ViewBag.Title = "Manage Account";
+}
+
+<h2>@ViewBag.Title.</h2>
+
+<p class="text-success">@ViewBag.StatusMessage</p>
+
+<ul class="nav nav-tabs nav-justified" role="tablist">
+    <li class="active"><a href="#profile" role="tab" data-toggle="tab">Profile</a></li>
+    <li><a href="#external" role="tab" data-toggle="tab">External providers</a></li>
+</ul>
+<br/>
+<div class="tab-content">
+    <div class="tab-pane active" id="profile">
+        @using (Html.BeginForm("ManageProfile", "Account", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+        {
+            @Html.AntiForgeryToken();
+            <div class="row">
+                <div class="col-md-2">
+                    @Html.HiddenFor(m => m.Item1.ProfilePicUrl)
+                    <img width="200" height="224" class="img-thumbnail" src="@Model.Item1.ProfilePicUrl">
+                </div>
+                <div class="col-md-10">
+                    <div class="row">
+                        <!-- ko foreach: $root.properties -->
+                        <div class="form-group col-md-6" style="height:30px;">
+                            <label class="col-md-3 control-label" data-bind="text: FieldLabel, attr: { for: 'Item1_' + FieldName }"></label>
+                            <div class="col-md-9">
+                                <label class="control-label" data-bind="text: Value, visible: !Editable(), click: function() { Editable(true); }"></label>
+                                <input type="text" class="form-control" style="max-width:100%;" data-bind="datePickerInit: FieldName == 'Birthdate', value: Value, visible: Editable, hasFocus: Editable, attr: { id: 'Item1_' + FieldName, name: 'Item1.' + FieldName }" />
+                                <!-- ko if: HasValidation -->
+                                <span class="field-validation-valid text-danger" data-valmsg-replace="true" data-bind="attr: { 'data-valmsg-for': 'Item1.' + FieldName }"></span>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                        <!-- /ko -->
+                        <div class="form-group col-md-6">
+                            <label class="col-md-3 control-label" for="Item1_Gender">Gender:</label>
+                            <div class="col-md-9">
+                            @if (Model.Item1.Gender == "m")
+                            {
+                                @Html.RadioButtonFor(m => m.Item1.Gender, "m", new { id = "male_gender", @checked = "checked" })
+                                @Html.Label("male_gender", "Male") <br />
+                                @Html.RadioButtonFor(m => m.Item1.Gender, "f", new { id = "female_gender" })
+                                @Html.Label("female_gender", "Female")
+                            }
+                            else
+                            {
+                                @Html.RadioButtonFor(m => m.Item1.Gender, "m", new { id = "male_gender" })
+                                @Html.Label("male_gender", "Male") <br />
+                                @Html.RadioButtonFor(m => m.Item1.Gender, "f", new { id = "female_gender", @checked = "checked" })
+                                @Html.Label("female_gender", "Female")
+                            }
+                            </div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+               
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="control-label">Languages you speak:</label>
+                    <input type="text" id="Item1_SpokenLanguages" name="Item1.SpokenLanguages" value="@Model.Item1.SpokenLanguages" />
+                </div>
+                <div class="col-md-6">
+                    <label class="control-label">Languages you want to learn:</label>
+                    <input type="text" id="Item1_LearningLanguages" name="Item1.LearningLanguages" value="@Model.Item1.LearningLanguages" />
+                </div>
+            </div>
+            <div class="row text-center">
+                <button type="reset" style="width:150px;" class="btn btn-default">Reset</button>
+                <button type="submit" style="width:150px;" class="btn btn-default">Save</button>
+            </div>
+        }
+    </div>
+    <div class="tab-pane" id="external">
+        <div class="row">
+            <div class="col-md-6">
+            @if (ViewBag.HasLocalPassword)
+            {
+                @Html.Partial("_ChangePasswordPartial", Model.Item2)
+            }
+            else
+            {
+                @Html.Partial("_SetPasswordPartial", Model.Item2)
+            }
+            </div>
+            <div class="col-md-6">
+                <section id="externalLogins">
+                    <div class="row">
+                        <div class="@if (ViewBag.HasExternalAccounts) { <text>col-md-6</text> } else { <text> hidden </text> }">
+                            @Html.Action("RemoveAccountList")
+                        </div>
+                        <div class="@if (ViewBag.HasExternalAccounts) { <text>col-md-6</text> } else { <text>col-md-12</text> }">
+                            @Html.Partial("_ExternalLoginsListPartial", new ExternalLoginListViewModel { Action = "LinkLogin", ReturnUrl = ViewBag.ReturnUrl })
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/Content/datepicker3.css" />
+    <link rel="stylesheet" href="~/Content/selectize/selectize.bootstrap3.css" />
+}
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script type="text/javascript" src="~/Scripts/knockout-3.1.0.js"></script>
+
+    <script src="~/Scripts/datepicker/bootstrap-datepicker.js"></script>
+    <script src="~/Scripts/date.format.js"></script>
+    <script src="~/Scripts/selectize/selectize.js"></script>
+    <script src="~/Scripts/selectize/remove_button/plugin.js"></script>
+    <script src="~/Scripts/selectize/drag_drop/plugin.js"></script>
+    <script>
+        @{
+            var options = from Language l in language_statistic.MvcApplication.db_languages.Languages
+                            select new { LanguageCode = l.ISO639_3, LanguageName = l.EnglishName };
+        }
+        var options = $.parseJSON('@Html.Raw(new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(options))');
+         
+        $(function () {
+            $('#Item1_SpokenLanguages').selectize({ plugins: ['remove_button'], options: options, valueField: 'LanguageCode', labelField: 'LanguageName', sortField: 'LanguageName', searchField: 'LanguageName', delimiter: '|' });
+            $('#Item1_LearningLanguages').selectize({ plugins: ['remove_button'], options: options, valueField: 'LanguageCode', labelField: 'LanguageName', sortField: 'LanguageName', searchField: 'LanguageName', delimiter: '|' });
+        });
+       
+        function ProfileViewModel() {
+            //Variables
+            var self = this;
+           
+            self.properties = ko.observableArray([{ FieldName: 'FirstName', FieldLabel: 'First name:', Value: ko.observable('@Model.Item1.FirstName'), Editable: ko.observable(false), HasValidation: true },
+                { FieldName: 'LastName', FieldLabel: 'Last name:', Value: ko.observable('@Model.Item1.LastName'), Editable: ko.observable(false), HasValidation: true },
+                { FieldName: 'Hometown', FieldLabel: 'Hometown:', Value: ko.observable('@Model.Item1.Hometown'), Editable: ko.observable(false), HasValidation: false },
+                { FieldName: 'Location', FieldLabel: 'Location:', Value: ko.observable('@Model.Item1.Location'), Editable: ko.observable(false), HasValidation: false },
+                { FieldName: 'Birthdate', FieldLabel: 'Birthdate:', Value: ko.observable('@Model.Item1.Birthdate.Value.ToShortDateString()'), Editable: ko.observable(false), HasValidation: false }]);
+            
+            ko.bindingHandlers.datePickerInit = {
+                init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+                    if (valueAccessor()) {
+                        $(element).datepicker({ format: 'mm/dd/yyyy', endDate: new Date().toDateString() }).on('changeDate', function (ev) { self.properties()[4].Value(ev.date.format('mm/dd/yyyy')); });
+                        $(element).datepicker('setDate', self.properties()[4].Value());
+                    }
+                }
+            }
+        }
+        ko.applyBindings(new ProfileViewModel());
+    </script>
+}
